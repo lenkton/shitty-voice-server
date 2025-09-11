@@ -1,6 +1,8 @@
 var button = document.getElementById('start-button');
 button.onclick = start;
 var pc;
+var track;
+var audio = document.getElementById('audio');
 
 function start() {
     pc = new RTCPeerConnection();
@@ -10,6 +12,15 @@ function start() {
     pc.onsignalingstatechange = () => {
         console.log('sig state changed: ',
             pc.signalingState);
+    }
+    // TODO: maybe it needs refactoring...
+    pc.ontrack = (e) => {
+        console.log('got the remote track');
+        track = (e.track);
+        let remoteStream = new MediaStream();
+        remoteStream.addTrack(track);
+        audio.srcObject = remoteStream;
+        audio.play();
     }
 
     // let dc = pc.createDataChannel('data');
