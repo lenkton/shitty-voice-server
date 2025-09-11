@@ -12,8 +12,13 @@ function start() {
             pc.signalingState);
     }
 
-    let dc = pc.createDataChannel('data');
-    pc.createOffer()
+    // let dc = pc.createDataChannel('data');
+    navigator.mediaDevices.getUserMedia({audio: true})
+        .then(media => {
+            pc.addTrack(media.getTracks()[0], media)
+        })
+        .then(() => 
+    pc.createOffer())
         .then(offer => {
             return pc.setLocalDescription(offer)
                 .then(() => {
