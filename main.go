@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -30,6 +31,10 @@ func handleOffer(w http.ResponseWriter, r *http.Request) {
 		go func() {
 			for {
 				rtp, _, err := remoteTrack.ReadRTP()
+				if err == io.EOF {
+					log.Println("INFO: end of the remote track")
+					break
+				}
 				if err != nil {
 					log.Printf("ERROR: remoteTrack.ReadRTP: %v\n", err)
 					break
