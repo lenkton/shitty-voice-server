@@ -27,16 +27,19 @@ func handleOffer(w http.ResponseWriter, r *http.Request) {
 		// WARN: maybe it should go somewhere else...
 		//       we must be sure that we have both local
 		//       and remote streams at the same time
-		// TODO: don't crash the application at the end
-		//       of a conversation
 		go func() {
 			for {
 				rtp, _, err := remoteTrack.ReadRTP()
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("ERROR: remoteTrack.ReadRTP: %v\n", err)
+					break
 				}
-				localTrack.WriteRTP(rtp)
+				err = localTrack.WriteRTP(rtp)
+				if err != nil {
+					log.Printf("ERROR: localTrack.WriteRTP: %v\n", err)
+				}
 			}
+			// TODO: do we need to stop the local track?
 		}()
 	})
 	var offer webrtc.SessionDescription
@@ -99,5 +102,6 @@ func main() {
 
 	http.Handle("/", http.FileServer(http.Dir("./frontend")))
 	http.HandleFunc("POST /offer", handleOffer)
+	log.Println("INFO: the app is listening on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
