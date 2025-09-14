@@ -1,7 +1,9 @@
 var button = document.getElementById('start-button');
 button.onclick = start;
+var endButton = document.getElementById('end-button');
+endButton.onclick = end;
 var pc;
-var track;
+var localStream;
 var audio = document.getElementById('audio');
 
 function start() {
@@ -16,7 +18,7 @@ function start() {
     // TODO: maybe it needs refactoring...
     pc.ontrack = (e) => {
         console.log('got the remote track');
-        track = (e.track);
+        let track = (e.track);
         let remoteStream = new MediaStream();
         remoteStream.addTrack(track);
         audio.srcObject = remoteStream;
@@ -26,10 +28,10 @@ function start() {
     // let dc = pc.createDataChannel('data');
     navigator.mediaDevices.getUserMedia({audio: true})
         .then(media => {
-            pc.addTrack(media.getTracks()[0], media)
+            localStream = media;
+            pc.addTrack(media.getTracks()[0], media);
         })
-        .then(() => 
-    pc.createOffer())
+        .then(() => pc.createOffer())
         .then(offer => {
             return pc.setLocalDescription(offer)
                 .then(() => {
@@ -42,4 +44,12 @@ function start() {
         .then(res => res.json())
         .then(res => pc.setRemoteDescription(res))
         .catch(console.log);
+}
+
+function end() {
+    console.log('hanging up');
+    pc.close();
+    pc = null;
+    for (track of localStream.getTracks()) track.stop();
+    localStream = null;
 }
