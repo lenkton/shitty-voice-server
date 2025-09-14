@@ -39,6 +39,10 @@ func handleOffer(w http.ResponseWriter, r *http.Request) {
 					log.Printf("ERROR: localTrack.WriteRTP: %v\n", err)
 				}
 			}
+			err = pc.Close()
+			if err != nil {
+				log.Printf("ERROR: pc.Close: %v\n", err)
+			}
 			// TODO: do we need to stop the local track?
 		}()
 	})
