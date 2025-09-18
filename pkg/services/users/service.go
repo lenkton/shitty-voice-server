@@ -10,14 +10,12 @@ import (
 )
 
 type UsersService struct {
-	api *webrtc.API
+	api  *webrtc.API
+	user *User
 }
 
-var remoteTrack *webrtc.TrackRemote
-var localTrack *webrtc.TrackLocalStaticRTP
-
 func NewService(api *webrtc.API) *UsersService {
-	return &UsersService{api: api}
+	return &UsersService{api: api, user: &User{}}
 }
 
 func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) {
@@ -28,13 +26,13 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 	}
 	pc.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
 		log.Println("INFO: wow, we have an audio track!")
-		remoteTrack = tr
+		us.user.remoteTrack = tr
 		// WARN: maybe it should go somewhere else...
 		//       we must be sure that we have both local
 		//       and remote streams at the same time
 		go func() {
 			for {
-				rtp, _, err := remoteTrack.ReadRTP()
+				rtp, _, err := us.user.remoteTrack.ReadRTP()
 				if err == io.EOF {
 					log.Println("INFO: end of the remote track")
 					break
@@ -43,7 +41,7 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 					log.Printf("ERROR: remoteTrack.ReadRTP: %v\n", err)
 					break
 				}
-				err = localTrack.WriteRTP(rtp)
+				err = us.user.localTrack.WriteRTP(rtp)
 				if err != nil {
 					log.Printf("ERROR: localTrack.WriteRTP: %v\n", err)
 				}
@@ -67,8 +65,8 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "shit")
-	pc.AddTrack(localTrack)
+	us.user.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "shit")
+	pc.AddTrack(us.user.localTrack)
 
 	gatherPromise := webrtc.GatheringCompletePromise(pc)
 	answer, err := pc.CreateAnswer(nil)
