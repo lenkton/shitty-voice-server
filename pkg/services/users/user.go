@@ -31,6 +31,33 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 	return nil
 }
 
+// TODO: maybe we should not return a pointer here
+func (u *User) HandleOffer(offer webrtc.SessionDescription) (*webrtc.SessionDescription, error) {
+	err := u.pc.SetRemoteDescription(offer)
+	if err != nil {
+		return nil, fmt.Errorf("pc.SetRemoteDescription: %v", err)
+	}
+
+	u.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "shit")
+	// TODO: it could return an error
+	u.pc.AddTrack(u.localTrack)
+
+	gatherPromise := webrtc.GatheringCompletePromise(u.pc)
+	answer, err := u.pc.CreateAnswer(nil)
+	if err != nil {
+		return nil, fmt.Errorf("pc.CreateAnswer: %v", err)
+	}
+	err = u.pc.SetLocalDescription(answer)
+	if err != nil {
+		return nil, fmt.Errorf("pc.SetLocalDescription: %v", err)
+	}
+	<-gatherPromise
+	// TODO: check, why do we have a pointer here,
+	//       while passing the object all around in other places
+	resAnswer := u.pc.LocalDescription()
+	return resAnswer, nil
+}
+
 func (u *User) onTrack(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
 	log.Println("INFO: wow, we have an audio track!")
 	u.remoteTrack = tr

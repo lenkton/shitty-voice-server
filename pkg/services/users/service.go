@@ -37,28 +37,13 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "malformed offer", http.StatusUnprocessableEntity)
 		return
 	}
-	err = us.user.pc.SetRemoteDescription(offer)
+	answer, err := us.user.HandleOffer(offer)
 	if err != nil {
-		log.Println(err)
+		log.Printf("ERROR: HandleOffer: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	us.user.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "shit")
-	us.user.pc.AddTrack(us.user.localTrack)
-
-	gatherPromise := webrtc.GatheringCompletePromise(us.user.pc)
-	answer, err := us.user.pc.CreateAnswer(nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	err = us.user.pc.SetLocalDescription(answer)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	<-gatherPromise
-	err = json.NewEncoder(w).Encode(*us.user.pc.LocalDescription())
+	err = json.NewEncoder(w).Encode(answer)
 	if err != nil {
 		log.Println(err)
 		return
