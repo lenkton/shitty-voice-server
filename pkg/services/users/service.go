@@ -33,7 +33,8 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 	var offer webrtc.SessionDescription
 	err = json.NewDecoder(r.Body).Decode(&offer)
 	if err != nil {
-		log.Println(err)
+		log.Printf("ERROR: parsing offer: %v\n", err)
+		http.Error(w, "malformed offer", http.StatusUnprocessableEntity)
 		return
 	}
 	err = us.user.pc.SetRemoteDescription(offer)
