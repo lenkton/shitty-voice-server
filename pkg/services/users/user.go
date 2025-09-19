@@ -9,14 +9,16 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
+// TODO: hide the fields and introduce some DTO
 type User struct {
+	ID          string `json:"id"`
 	remoteTrack *webrtc.TrackRemote
 	localTrack  *webrtc.TrackLocalStaticRTP
 	pc          *webrtc.PeerConnection
 }
 
-func NewUser() *User {
-	return &User{}
+func NewUser(id string) *User {
+	return &User{ID: id}
 }
 
 var ErrPCAlreadyCreated = errors.New("peer connection already created")

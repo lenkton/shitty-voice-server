@@ -15,6 +15,20 @@ muteButton.onclick = mute;
 var unmuteButton = document.getElementById('unmute-button');
 unmuteButton.onclick = unmute;
 
+var joinRoomButton = document.getElementById('join-room-button');
+joinRoomButton.onclick = joinRoom;
+
+// TODO: remove hardcoding
+var roomId = 12;
+function joinRoom(event) {
+    fetch(`/rooms/${roomId}/join`, {
+        method: 'POST', body: JSON.stringify({userId: userId.toString()})
+    })
+        .then(response => response.json())
+        .then(console.log)
+        .catch(console.log);
+}
+
 // TODO: disable the buttons when there is no localStream
 function mute() {
     if (!localStream) return;
