@@ -1,6 +1,7 @@
 package main
 
 import (
+	"echo-webrtc-test/pkg/middleware"
 	"echo-webrtc-test/pkg/services/users"
 	"fmt"
 	"log"
@@ -35,9 +36,13 @@ func main() {
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
 	usersService := users.NewService(api)
 
-	http.Handle("/", http.FileServer(http.Dir("./frontend")))
 	// TODO: move http-handling into some separate package
-	http.HandleFunc("POST /offer", usersService.HTTPHandleOffer)
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
+	mux.HandleFunc("POST /offer", usersService.HTTPHandleOffer)
+
+	handler := middleware.RequestLogger(mux)
+
 	log.Println("INFO: the app is listening on localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
