@@ -10,6 +10,19 @@ var userId = Math.floor(Math.random() * 100);
 var userIdMessage = document.getElementById('id-message');
 userIdMessage.innerText = `Your id is ${userId}`;
 
+var muteButton = document.getElementById('mute-button');
+muteButton.onclick = mute;
+var unmuteButton = document.getElementById('unmute-button');
+unmuteButton.onclick = unmute;
+
+// TODO: disable the buttons and return here early when there is no localStream
+function mute() {
+    for (track of localStream.getTracks()) track.enabled = false;
+}
+function unmute() {
+    for (track of localStream.getTracks()) track.enabled = true;
+}
+
 function start() {
     pc = new RTCPeerConnection();
     pc.onconnectionstatechange = (e) => {
