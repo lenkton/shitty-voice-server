@@ -45,7 +45,8 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 	}
 	err = json.NewEncoder(w).Encode(answer)
 	if err != nil {
-		log.Println(err)
+		log.Printf("ERROR: encoding answer: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 }
