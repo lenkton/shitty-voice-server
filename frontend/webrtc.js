@@ -15,11 +15,15 @@ muteButton.onclick = mute;
 var unmuteButton = document.getElementById('unmute-button');
 unmuteButton.onclick = unmute;
 
-// TODO: disable the buttons and return here early when there is no localStream
+// TODO: disable the buttons when there is no localStream
 function mute() {
+    if (!localStream) return;
+
     for (track of localStream.getTracks()) track.enabled = false;
 }
 function unmute() {
+    if (!localStream) return;
+
     for (track of localStream.getTracks()) track.enabled = true;
 }
 
