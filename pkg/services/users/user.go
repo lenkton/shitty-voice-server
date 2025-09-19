@@ -15,6 +15,10 @@ type User struct {
 	pc          *webrtc.PeerConnection
 }
 
+func NewUser() *User {
+	return &User{}
+}
+
 var ErrPCAlreadyCreated = errors.New("peer connection already created")
 
 func (u *User) CreatePeerConnection(api *webrtc.API) error {

@@ -6,6 +6,10 @@ var pc;
 var localStream;
 var audio = document.getElementById('audio');
 
+var userId = Math.floor(Math.random() * 100);
+var userIdMessage = document.getElementById('id-message');
+userIdMessage.innerText = `Your id is ${userId}`;
+
 function start() {
     pc = new RTCPeerConnection();
     pc.onconnectionstatechange = (e) => {
@@ -35,7 +39,7 @@ function start() {
         .then(offer => {
             return pc.setLocalDescription(offer)
                 .then(() => {
-                    return fetch('/offer', {
+                    return fetch(`/users/${userId}/offer`, {
                         method: 'POST',
                         body: JSON.stringify(offer)
                     })

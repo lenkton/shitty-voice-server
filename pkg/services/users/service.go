@@ -9,16 +9,23 @@ import (
 )
 
 type UsersService struct {
-	api  *webrtc.API
-	user *User
+	api   *webrtc.API
+	users map[string]*User
 }
 
 func NewService(api *webrtc.API) *UsersService {
-	return &UsersService{api: api, user: &User{}}
+	return &UsersService{api: api, users: make(map[string]*User)}
 }
 
 func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) {
-	err := us.user.CreatePeerConnection(us.api)
+	userID := r.PathValue("user_id")
+	user, found := us.users[userID]
+	if !found {
+		user = NewUser()
+		us.users[userID] = user
+	}
+
+	err := user.CreatePeerConnection(us.api)
 	// TODO: somehow kill the pc after the call is over
 	if err == ErrPCAlreadyCreated {
 		log.Println("ERROR: there is a PeerConnection already")
@@ -37,7 +44,7 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "malformed offer", http.StatusUnprocessableEntity)
 		return
 	}
-	answer, err := us.user.HandleOffer(offer)
+	answer, err := user.HandleOffer(offer)
 	if err != nil {
 		log.Printf("ERROR: HandleOffer: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

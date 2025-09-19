@@ -39,7 +39,7 @@ func main() {
 	// TODO: move http-handling into some separate package
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
-	mux.HandleFunc("POST /offer", usersService.HTTPHandleOffer)
+	mux.HandleFunc("POST /users/{user_id}/offer", usersService.HTTPHandleOffer)
 
 	handler := middleware.RequestLogger(mux)
 
