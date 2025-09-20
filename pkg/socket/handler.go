@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -32,14 +33,48 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		if _, err := io.Copy(w, r); err != nil {
+		if err := handleMessage(w, r); err != nil {
 			log.Println(err)
-			return
+			// I think it is better to try to close the w
+			// return
 		}
 		if err := w.Close(); err != nil {
 			log.Println(err)
 			return
 		}
 	}
+}
 
+func handleMessage(w io.Writer, r io.Reader) error {
+	message := make(map[string]any)
+	err := json.NewDecoder(r).Decode(&message)
+	if err != nil {
+		log.Printf("ERROR: parsing ws message: %v\n", err)
+		_, innerErr := w.Write([]byte(`{"error":"malformed message"}`))
+		if innerErr != nil {
+			log.Printf("ERROR: writing ws message: %v\n", err)
+		}
+		return err
+	}
+	answer, err := handleParsedMessage(message)
+	if err != nil {
+		log.Printf("ERROR: processing ws message: %v\n", err)
+		return err
+	}
+
+	err = json.NewEncoder(w).Encode(answer)
+	if err != nil {
+		log.Printf("ERROR: writing ws message: %v\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func handleParsedMessage(message map[string]any) (any, error) {
+	switch message["type"] {
+	case "ping":
+		return map[string]any{"type": "pong"}, nil
+	}
+	return make(map[string]any), nil
 }
