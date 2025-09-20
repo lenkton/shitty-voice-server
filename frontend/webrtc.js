@@ -20,6 +20,17 @@ joinRoomButton.onclick = joinRoom;
 
 // TODO: remove hardcoding
 var roomId = 12;
+
+var socket = new WebSocket('/socket');
+socket.onopen = () => {
+    console.log("opened websocket");
+    socket.send("hello!");
+};
+socket.onmessage = (e) => {
+    console.log('got a ws message');
+    console.log(e.data);
+};
+
 function joinRoom(event) {
     fetch(`/rooms/${roomId}/join`, {
         method: 'POST', body: JSON.stringify({userId: userId.toString()})

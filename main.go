@@ -3,6 +3,7 @@ package main
 import (
 	"echo-webrtc-test/pkg/middleware"
 	"echo-webrtc-test/pkg/services/users"
+	"echo-webrtc-test/pkg/socket"
 	"fmt"
 	"log"
 	"net"
@@ -39,6 +40,7 @@ func main() {
 	// TODO: move http-handling into some separate package
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
+	mux.HandleFunc("/socket", socket.Handler)
 	mux.HandleFunc("POST /users/{user_id}/offer", usersService.HTTPHandleOffer)
 	mux.HandleFunc("POST /rooms/{room_id}/join", usersService.HTTPHandleJoinRoom)
 
