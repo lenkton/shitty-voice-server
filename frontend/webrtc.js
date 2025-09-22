@@ -6,7 +6,7 @@ var pc;
 var localStream;
 var audio = document.getElementById('audio');
 
-var userId = Math.floor(Math.random() * 100);
+var userId = Math.floor(Math.random() * 100).toString();
 var userIdMessage = document.getElementById('id-message');
 userIdMessage.innerText = `Your id is ${userId}`;
 
@@ -24,7 +24,7 @@ var roomId = 12;
 var socket = new WebSocket('/socket');
 socket.onopen = () => {
     console.log("opened websocket");
-    socket.send("hello!");
+    socket.send(JSON.stringify({type: 'login', userId: userId}));
 };
 socket.onmessage = (e) => {
     console.log('got a ws message');
