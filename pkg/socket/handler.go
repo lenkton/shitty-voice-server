@@ -3,6 +3,7 @@ package socket
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,6 +28,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, ConnectionKeyType{}, conn)
+	defer logoutUser(ctx)
 	for {
 		messageType, r, err := conn.NextReader()
 		if err != nil {
@@ -77,8 +79,9 @@ func handleMessage(w io.Writer, r io.Reader, ctx context.Context) error {
 	return nil
 }
 
-// TODO: clear the storage on connection close
+// TODO: introduce some kind of double hashmap or just store userID in the context
 var userConnsStorage = make(map[string]*websocket.Conn)
+var inverseUserConnsStorage = make(map[*websocket.Conn]string)
 
 // TODO: rewrite into a type: MessageWithContext
 func handleParsedMessage(message map[string]any, ctx context.Context) (any, error) {
@@ -99,6 +102,7 @@ func handleParsedMessage(message map[string]any, ctx context.Context) (any, erro
 		// WARN: could panic
 		conn := connAny.(*websocket.Conn)
 		userConnsStorage[userID] = conn
+		inverseUserConnsStorage[conn] = userID
 		log.Printf("INFO: ws user %v logged in\n", userID)
 		return map[string]any{
 				"type":    "response",
@@ -107,4 +111,25 @@ func handleParsedMessage(message map[string]any, ctx context.Context) (any, erro
 			nil
 	}
 	return make(map[string]any), nil
+}
+
+func logoutUser(ctx context.Context) error {
+	connAny := ctx.Value(ConnectionKeyType{})
+	if connAny == nil {
+		log.Printf("ERROR: logouting user: no user conn in the context\n")
+		return errors.New("no user conn in the context")
+	}
+	// WARN: could panic
+	conn := connAny.(*websocket.Conn)
+	userID, found := inverseUserConnsStorage[conn]
+	// NOTE: maybe sometimes it's not an error (e.g. guests)
+	if !found {
+		log.Printf("ERROR: logouting user: no user id found\n")
+		return errors.New("no user id in the context")
+	}
+	// WARN: it might find nothing
+	delete(userConnsStorage, userID)
+	delete(inverseUserConnsStorage, conn)
+	log.Printf("INFO: user %v logged off\n", userID)
+	return nil
 }
