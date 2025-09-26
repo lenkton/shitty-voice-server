@@ -1,6 +1,7 @@
 package users
 
 import (
+	"echo-webrtc-test/pkg/socket"
 	"errors"
 	"fmt"
 	"io"
@@ -34,6 +35,30 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 	u.pc = pc
 
 	pc.OnTrack(u.onTrack)
+	pc.OnNegotiationNeeded(func() {
+		log.Println("ERROR: NEGOTIATION NEEDED!!!!!")
+		offer, err := pc.CreateOffer(nil)
+		if err != nil {
+			log.Printf("ERROR: creating offer: %v\n", err)
+			return
+		}
+
+		err = pc.SetLocalDescription(offer)
+		if err != nil {
+			log.Printf("ERROR: setting local description: %v\n", err)
+			return
+		}
+
+		err = socket.SendMessage(u.ID, map[string]any{
+			"type": "offer",
+			"sdp":  offer,
+		})
+		if err != nil {
+			log.Printf("ERROR: sending offer: %v\n", err)
+		}
+
+		log.Printf("INFO: Renegotiation offer sent to %v\n", u.ID)
+	})
 	return nil
 }
 
@@ -44,9 +69,9 @@ func (u *User) HandleOffer(offer webrtc.SessionDescription) (*webrtc.SessionDesc
 		return nil, fmt.Errorf("pc.SetRemoteDescription: %v", err)
 	}
 
-	u.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "shit")
-	// TODO: it could return an error
-	u.pc.AddTrack(u.localTrack)
+	u.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", u.ID)
+	// u.pc.AddTrack(u.localTrack)
+	// u.pc.AddStream()
 
 	gatherPromise := webrtc.GatheringCompletePromise(u.pc)
 	answer, err := u.pc.CreateAnswer(nil)

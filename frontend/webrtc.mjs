@@ -44,6 +44,22 @@ function unmute() {
     for (let track of localStream.getTracks()) track.enabled = true;
 }
 
+// TODO: there is Promise.withResolvers()!
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+var resolveConnectedPromise;
+var connectedPromise = new Promise((resolve, reject) => {
+    resolveConnectedPromise = resolve;
+});
+function sendIceCandidate(candidate) {
+    connectedPromise
+        .then(() =>
+            fetch(`/users/${userId}/ice`, {
+                method: 'POST',
+                body: JSON.stringify(candidate) }))
+        .catch(console.log);
+}
+
+var dataChannel;
 function start() {
     pc = new RTCPeerConnection();
     pc.onconnectionstatechange = (e) => {
@@ -58,9 +74,18 @@ function start() {
         console.log('got the remote track');
         let track = (e.track);
         let remoteStream = new MediaStream();
+        let audioElement = document.createElement('audio');
         remoteStream.addTrack(track);
-        audio.srcObject = remoteStream;
-        audio.play();
+        audioElement.srcObject = remoteStream;
+        document.body.appendChild(audioElement);
+        audioElement.play();
+    }
+    pc.onicecandidate = (e) => {
+        console.log('got ice candidate');
+        console.log(e.candidate);
+        if (e.candidate) {
+            sendIceCandidate(e.candidate);
+        }
     }
 
     // let dc = pc.createDataChannel('data');
@@ -69,6 +94,8 @@ function start() {
             localStream = media;
             pc.addTrack(media.getTracks()[0], media);
         })
+        .then(()=> pc.createDataChannel('stub'))
+        .then(channel => {dataChannel = channel;})
         .then(() => pc.createOffer())
         .then(offer => {
             return pc.setLocalDescription(offer)
@@ -81,7 +108,24 @@ function start() {
         })
         .then(res => res.json())
         .then(res => pc.setRemoteDescription(res))
+        .then(() => resolveConnectedPromise())
         .catch(console.log);
+}
+
+export function handleOffer(sdp) {
+    pc.setRemoteDescription(sdp)
+        .then(()=>pc.createAnswer())
+        .then(answer => {
+            return pc.setLocalDescription(answer)
+                .then(() => fetch(`/users/${userId}/answer`, {
+                        method: 'POST',
+                        body: JSON.stringify(answer)
+                    })
+                );
+        })
+        .then(console.log)
+        .catch(console.log);
+    console.log('set remote offer')
 }
 
 function end() {

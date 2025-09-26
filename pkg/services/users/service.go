@@ -18,6 +18,31 @@ func NewService(api *webrtc.API) *UsersService {
 	return &UsersService{api: api, users: make(map[string]*User), rooms: make(map[string]*Room)}
 }
 
+func (us *UsersService) HTTPHandleAnswer(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("user_id")
+	user, found := us.users[userID]
+	if !found {
+		log.Printf("WARN: user %v not found\n", userID)
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	sdp := webrtc.SessionDescription{}
+	err := json.NewDecoder(r.Body).Decode(&sdp)
+	if err != nil {
+		log.Printf("WARN: malformed request: %v\n", err)
+		http.Error(w, "malformed request", http.StatusUnprocessableEntity)
+		return
+	}
+	err = user.pc.SetRemoteDescription(sdp)
+	if err != nil {
+		log.Printf("ERROR: error adding Answer: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("INFO: Answer added for user %v\n", userID)
+	w.WriteHeader(http.StatusOK)
+}
+
 func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("user_id")
 	user, found := us.users[userID]
@@ -57,6 +82,32 @@ func (us *UsersService) HTTPHandleOffer(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (us *UsersService) HTTPHandleICE(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("user_id")
+	user, found := us.users[userID]
+	if !found {
+		log.Printf("WARN: user %v not found\n", userID)
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	candidateInit := webrtc.ICECandidateInit{}
+	err := json.NewDecoder(r.Body).Decode(&candidateInit)
+	if err != nil {
+		log.Printf("WARN: malformed request: %v\n", err)
+		http.Error(w, "malformed request", http.StatusUnprocessableEntity)
+		return
+	}
+	err = user.pc.AddICECandidate(candidateInit)
+	if err != nil {
+		log.Printf("ERROR: error adding ICE candidate: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("INFO: ICE added\n")
+	w.WriteHeader(http.StatusOK)
 }
 
 // TODO: check if the user has already joined some room
