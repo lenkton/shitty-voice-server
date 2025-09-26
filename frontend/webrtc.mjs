@@ -36,12 +36,12 @@ function joinRoom(event) {
 function mute() {
     if (!localStream) return;
 
-    for (track of localStream.getTracks()) track.enabled = false;
+    for (let track of localStream.getTracks()) track.enabled = false;
 }
 function unmute() {
     if (!localStream) return;
 
-    for (track of localStream.getTracks()) track.enabled = true;
+    for (let track of localStream.getTracks()) track.enabled = true;
 }
 
 function start() {
@@ -88,6 +88,6 @@ function end() {
     console.log('hanging up');
     pc.close();
     pc = null;
-    for (track of localStream.getTracks()) track.stop();
+    for (let track of localStream.getTracks()) track.stop();
     localStream = null;
 }
