@@ -1,3 +1,5 @@
+import './socket.mjs';
+
 var button = document.getElementById('start-button');
 button.onclick = start;
 var endButton = document.getElementById('end-button');
@@ -6,7 +8,7 @@ var pc;
 var localStream;
 var audio = document.getElementById('audio');
 
-var userId = Math.floor(Math.random() * 100).toString();
+export var userId = Math.floor(Math.random() * 100).toString();
 var userIdMessage = document.getElementById('id-message');
 userIdMessage.innerText = `Your id is ${userId}`;
 
@@ -20,16 +22,6 @@ joinRoomButton.onclick = joinRoom;
 
 // TODO: remove hardcoding
 var roomId = 12;
-
-var socket = new WebSocket('/socket');
-socket.onopen = () => {
-    console.log("opened websocket");
-    socket.send(JSON.stringify({type: 'login', userId: userId}));
-};
-socket.onmessage = (e) => {
-    console.log('got a ws message');
-    console.log(e.data);
-};
 
 function joinRoom(event) {
     fetch(`/rooms/${roomId}/join`, {
