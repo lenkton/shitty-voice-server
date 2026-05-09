@@ -69,7 +69,10 @@ func (u *User) HandleOffer(offer webrtc.SessionDescription) (*webrtc.SessionDesc
 		return nil, fmt.Errorf("pc.SetRemoteDescription: %v", err)
 	}
 
-	u.localTrack, _ = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", u.ID)
+	u.localTrack, _ = webrtc.NewTrackLocalStaticRTP(
+		webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus},
+		"audio", u.ID,
+	)
 	// u.pc.AddTrack(u.localTrack)
 	// u.pc.AddStream()
 
