@@ -1,9 +1,9 @@
 services:
-  voiceServer:
+  voice_server:
     build: .
     ports:
       - 8443:8443
     networks:
-      - voiceServerNetwork
+      - voice_server_network
 networks:
-  voiceServerNetwork:
+  voice_server_network:
