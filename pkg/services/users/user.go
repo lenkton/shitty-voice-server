@@ -35,6 +35,21 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 	u.pc = pc
 
 	pc.OnTrack(u.onTrack)
+	pc.OnConnectionStateChange(func(pcs webrtc.PeerConnectionState) {
+		log.Printf("INFO: user %s: connection state changed: %s\n", u.ID, pcs.String())
+		if pcs == webrtc.PeerConnectionStateDisconnected {
+			pc.Close()
+			// TODO: close and remove tracks
+			u.pc = nil
+			log.Printf("INFO: user %s: disconnected\n", u.ID)
+		}
+		if pcs == webrtc.PeerConnectionStateClosed {
+			// maybe not needed
+			pc.Close()
+			u.pc = nil
+			log.Printf("INFO: user %s: disconnected\n", u.ID)
+		}
+	})
 	pc.OnNegotiationNeeded(func() {
 		log.Println("ERROR: NEGOTIATION NEEDED!!!!!")
 		offer, err := pc.CreateOffer(nil)
