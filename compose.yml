@@ -1,9 +1,21 @@
 services:
   voice_server:
     build: .
+    environment:
+      AMQP_URL: "amqp://rabbitmq:5672"
     ports:
       - 8443:8443
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - voice_server_network
+  rabbitmq:
+    image: rabbitmq:4.3.1-alpine
+    networks:
+      - voice_server_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      start_period: 3s
 networks:
   voice_server_network:

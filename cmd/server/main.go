@@ -1,6 +1,7 @@
 package main
 
 import (
+	"echo-webrtc-test/pkg/amqp"
 	"echo-webrtc-test/pkg/middleware"
 	"echo-webrtc-test/pkg/services/users"
 	"echo-webrtc-test/pkg/socket"
@@ -13,6 +14,12 @@ import (
 )
 
 func main() {
+	amqpClient, err := amqp.NewAMQPClient()
+	if err != nil {
+		panic(err)
+	}
+	defer amqpClient.Close()
+
 	settingEngine := webrtc.SettingEngine{}
 
 	// Enable support only for TCP ICE candidates.
