@@ -1,7 +1,6 @@
 package users
 
 import (
-	"echo-webrtc-test/pkg/socket"
 	"errors"
 	"fmt"
 	"io"
@@ -64,7 +63,7 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 			return
 		}
 
-		err = socket.SendMessage(u.ID, map[string]any{
+		err = Notify(u.ID, map[string]any{
 			"type": "offer",
 			"sdp":  offer,
 		})

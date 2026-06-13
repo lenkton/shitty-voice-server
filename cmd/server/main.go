@@ -20,6 +20,8 @@ func main() {
 	}
 	defer amqpClient.Close()
 
+	amqp.MainAMQPClient = amqpClient
+
 	settingEngine := webrtc.SettingEngine{}
 
 	// Enable support only for TCP ICE candidates.

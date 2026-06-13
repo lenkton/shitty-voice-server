@@ -9,13 +9,14 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - voice_server_network
+      - voice-server-network
   rabbitmq:
     image: rabbitmq:4.3.1-alpine
     networks:
-      - voice_server_network
+      - voice-server-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       start_period: 3s
 networks:
-  voice_server_network:
+  voice-server-network:
+    external: true

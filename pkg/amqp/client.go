@@ -10,6 +10,8 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
+var MainAMQPClient *AMQPClient
+
 // TODO: ensure it is thread-safe
 type AMQPClient struct {
 	conn *amqp091.Connection
