@@ -36,13 +36,13 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 	pc.OnTrack(u.onTrack)
 	pc.OnConnectionStateChange(func(pcs webrtc.PeerConnectionState) {
 		log.Printf("INFO: user %s: connection state changed: %s\n", u.ID, pcs.String())
-		if pcs == webrtc.PeerConnectionStateDisconnected {
+		switch pcs {
+		case webrtc.PeerConnectionStateDisconnected, webrtc.PeerConnectionStateFailed:
 			pc.Close()
 			// TODO: close and remove tracks
 			u.pc = nil
 			log.Printf("INFO: user %s: disconnected\n", u.ID)
-		}
-		if pcs == webrtc.PeerConnectionStateClosed {
+		case webrtc.PeerConnectionStateClosed:
 			// maybe not needed
 			pc.Close()
 			u.pc = nil
