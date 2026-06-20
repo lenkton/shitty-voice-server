@@ -70,6 +70,7 @@ func (client *AMQPClient) SendMessageToQueue(message string, queueName string) e
 		return fmt.Errorf("sending the message: %s", err)
 	}
 
+	// TODO: make it DEBUG and hide from logs in prod
 	log.Printf("INFO: sent message: %s, to queue: %s\n", message, queueName)
 
 	return nil

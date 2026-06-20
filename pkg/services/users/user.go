@@ -15,10 +15,28 @@ type User struct {
 	remoteTrack *webrtc.TrackRemote
 	localTrack  *webrtc.TrackLocalStaticRTP
 	pc          *webrtc.PeerConnection
+	room        *Room
+	trackSenders map[string]*webrtc.RTPSender
 }
 
 func NewUser(id string) *User {
-	return &User{ID: id}
+	return &User{
+		ID:           id,
+		trackSenders: make(map[string]*webrtc.RTPSender),
+	}
+}
+
+func (u *User) removePeerTrack(peerID string) {
+	sender, ok := u.trackSenders[peerID]
+	if !ok {
+		return
+	}
+	if u.pc != nil {
+		if err := u.pc.RemoveTrack(sender); err != nil {
+			log.Printf("ERROR: user %s: removing track from %s: %v\n", u.ID, peerID, err)
+		}
+	}
+	delete(u.trackSenders, peerID)
 }
 
 var ErrPCAlreadyCreated = errors.New("peer connection already created")
@@ -39,12 +57,18 @@ func (u *User) CreatePeerConnection(api *webrtc.API) error {
 		switch pcs {
 		case webrtc.PeerConnectionStateDisconnected, webrtc.PeerConnectionStateFailed:
 			pc.Close()
+			if u.room != nil {
+				u.room.Leave(u)
+			}
 			// TODO: close and remove tracks
 			u.pc = nil
 			log.Printf("INFO: user %s: disconnected\n", u.ID)
 		case webrtc.PeerConnectionStateClosed:
 			// maybe not needed
 			pc.Close()
+			if u.room != nil {
+				u.room.Leave(u)
+			}
 			u.pc = nil
 			log.Printf("INFO: user %s: disconnected\n", u.ID)
 		}

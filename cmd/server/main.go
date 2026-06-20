@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/pion/webrtc/v4"
 )
@@ -42,6 +43,8 @@ func main() {
 
 	tcpMux := webrtc.NewICETCPMux(nil, tcpListener, 8)
 	settingEngine.SetICETCPMux(tcpMux)
+
+	settingEngine.SetNAT1To1IPs([]string{os.Getenv("PUBLIC_IP")}, webrtc.ICECandidateTypeHost)
 
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
 	usersService := users.NewService(api)
