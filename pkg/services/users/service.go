@@ -139,3 +139,52 @@ func (us *UsersService) HTTPHandleJoinRoom(w http.ResponseWriter, r *http.Reques
 		log.Printf("ERROR: encoding json: %v\n", err)
 	}
 }
+
+type SerializedUser struct {
+	ID     string `json:"id"`
+	RoomID string `json:"room_id"`
+}
+
+func (us *UsersService) HTTPListUsers(w http.ResponseWriter, r *http.Request) {
+	serializedUsers := make([]*SerializedUser, 0, len(us.users))
+	for _, user := range us.users {
+		su := &SerializedUser{}
+		su.FromUser(user)
+		serializedUsers = append(serializedUsers, su)
+	}
+	err := json.NewEncoder(w).Encode(serializedUsers)
+	if err != nil {
+		log.Printf("ERROR: encoding json: %v\n", err)
+	}
+}
+
+func (su *SerializedUser) FromUser(user *User) {
+	su.ID = user.ID
+	su.RoomID = user.room.ID
+}
+
+type SerializedRoom struct {
+	ID      string   `json:"id"`
+	UserIDs []string `json:"user_ids"`
+}
+
+func (us *UsersService) HTTPListRooms(w http.ResponseWriter, r *http.Request) {
+	serializedRooms := make([]*SerializedRoom, 0, len(us.users))
+	for _, room := range us.rooms {
+		sr := &SerializedRoom{}
+		sr.FromRoom(room)
+		serializedRooms = append(serializedRooms, sr)
+	}
+	err := json.NewEncoder(w).Encode(serializedRooms)
+	if err != nil {
+		log.Printf("ERROR: encoding json: %v\n", err)
+	}
+}
+
+func (sr *SerializedRoom) FromRoom(room *Room) {
+	sr.ID = room.ID
+	sr.UserIDs = make([]string, 0)
+	for _, user := range room.Users {
+		sr.UserIDs = append(sr.UserIDs, user.ID)
+	}
+}

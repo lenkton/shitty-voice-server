@@ -53,9 +53,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
 	mux.HandleFunc("/socket", socket.Handler)
+	mux.HandleFunc("GET /users", usersService.HTTPListUsers)
 	mux.HandleFunc("POST /users/{user_id}/offer", usersService.HTTPHandleOffer)
 	mux.HandleFunc("POST /users/{user_id}/answer", usersService.HTTPHandleAnswer)
 	mux.HandleFunc("POST /users/{user_id}/ice", usersService.HTTPHandleICE)
+	mux.HandleFunc("GET /rooms", usersService.HTTPListRooms)
 	mux.HandleFunc("POST /rooms/{room_id}/join", usersService.HTTPHandleJoinRoom)
 
 	handler := middleware.RequestLogger(mux)
