@@ -46,7 +46,7 @@ func (r *Room) Leave(user *User) {
 
 		// not cool for slices which we iterate upon,
 		// but ok here, because we break
-		r.Users = slices.Delete(r.Users, i, i)
+		r.Users = slices.Delete(r.Users, i, i+1)
 		break
 	}
 
