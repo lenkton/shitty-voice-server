@@ -44,7 +44,9 @@ func main() {
 	tcpMux := webrtc.NewICETCPMux(nil, tcpListener, 8)
 	settingEngine.SetICETCPMux(tcpMux)
 
-	settingEngine.SetNAT1To1IPs([]string{os.Getenv("PUBLIC_IP")}, webrtc.ICECandidateTypeHost)
+	if ip, ok := os.LookupEnv("PUBLIC_IP"); ok {
+		settingEngine.SetNAT1To1IPs([]string{ip}, webrtc.ICECandidateTypeHost)
+	}
 
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
 	usersService := users.NewService(api)
