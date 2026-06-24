@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -46,6 +47,7 @@ func main() {
 
 	if ip, ok := os.LookupEnv("PUBLIC_IP"); ok {
 		settingEngine.SetNAT1To1IPs([]string{ip}, webrtc.ICECandidateTypeHost)
+		slog.Info("Bound ICE host", "IP", ip)
 	}
 
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(settingEngine))
