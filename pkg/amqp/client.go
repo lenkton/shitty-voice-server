@@ -3,7 +3,7 @@ package amqp
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -70,8 +70,7 @@ func (client *AMQPClient) SendMessageToQueue(message string, queueName string) e
 		return fmt.Errorf("sending the message: %s", err)
 	}
 
-	// TODO: make it DEBUG and hide from logs in prod
-	log.Printf("INFO: sent message: %s, to queue: %s\n", message, queueName)
+	slog.Debug("sent AMQP message", "message", message, "queue", queueName)
 
 	return nil
 }
